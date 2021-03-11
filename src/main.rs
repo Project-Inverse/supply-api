@@ -4,9 +4,11 @@ use web3::{
     contract::{Contract, Options},
     types::{U256, H160},
 };
+use std::env;
+use dotenv::dotenv;
 
-async fn check() -> web3::contract::Result<U256> {
-    let transport = web3::transports::WebSocket::new("wss://mainnet.infura.io/ws/v3/357aaa33dd2745f983d190354f06e5a7").await?;
+async fn check(infura_key: &str) -> web3::contract::Result<U256> {
+    let transport = web3::transports::WebSocket::new(format!("wss://mainnet.infura.io/ws/v3/{}", infura_key).as_str()).await?;
     let web3 = web3::Web3::new(transport);
 
     // Accessing existing contract.
@@ -49,16 +51,22 @@ async fn check() -> web3::contract::Result<U256> {
 
 #[get("/api/supply")]
 async fn supply() -> impl Responder {
-    match check().await {
-        Err(_e) => HttpResponse::Ok().body("Something went wrong"),
-        Ok(result) => {
-            HttpResponse::Ok().body(format!("{}", result))
+    match env::var("INFURA_KEY") {
+        Err(_e) => HttpResponse::Ok().body("Invalid key"),
+        Ok(infura_key) => {
+            match check(&infura_key).await {
+                Err(_e) => HttpResponse::Ok().body("Something went wrong"),
+                Ok(result) => {
+                    HttpResponse::Ok().body(format!("{}", result))
+                }
+            }
         }
     }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
     HttpServer::new(|| {
         App::new()
             .service(supply)
