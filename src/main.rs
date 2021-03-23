@@ -27,7 +27,6 @@ async fn check(infura_key: &str) -> web3::contract::Result<U256> {
         hex!("bC7175790c7EAf4A429Ae0d20a98862FC1F0352A").into(), 
         hex!("EAe020457249D82488dCEB45eB8E76258C6B4d61").into(),
         hex!("09cBA546a88CF031fFd69a21565E41e9Ca69108b").into(),
-        hex!("A29BD79D213918615fa7700163b0bED2A0A27C3F").into(),
     ];
 
     let mut sum: U256 = U256::zero();
@@ -49,7 +48,7 @@ async fn check(infura_key: &str) -> web3::contract::Result<U256> {
     Ok(circulating_supply)
 }
 
-#[get("/api/supply")]
+#[get("/supply")]
 async fn supply() -> impl Responder {
     match env::var("INFURA_KEY") {
         Err(_e) => HttpResponse::Ok().body("Invalid key"),
@@ -57,11 +56,16 @@ async fn supply() -> impl Responder {
             match check(&infura_key).await {
                 Err(_e) => HttpResponse::Ok().body("Something went wrong"),
                 Ok(result) => {
-                    HttpResponse::Ok().body(format!("{}", result))
+                    HttpResponse::Ok().body(format!("{}.000000", result))
                 }
             }
         }
     }
+}
+
+#[get("/")]
+async fn index() -> impl Responder {
+    HttpResponse::Ok().body("Status: Green")
 }
 
 #[actix_web::main]
@@ -70,7 +74,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(supply)
-            // .route("/hey", web::get().to(manual_hello))
+            .service(index)
     })
     .bind("127.0.0.1:8080")?
     .run()
