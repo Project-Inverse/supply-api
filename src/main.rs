@@ -56,7 +56,9 @@ async fn supply() -> impl Responder {
             match check(&infura_key).await {
                 Err(_e) => HttpResponse::Ok().body("Something went wrong"),
                 Ok(result) => {
-                    HttpResponse::Ok().body(format!("{}.000000", result))
+                    HttpResponse::Ok()
+                        .content_type("application/json; charset=utf-8")
+                        .body(format!("{}", result))
                 }
             }
         }
