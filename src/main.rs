@@ -58,6 +58,7 @@ async fn supply() -> impl Responder {
                 Ok(result) => {
                     HttpResponse::Ok()
                         .content_type("application/json; charset=utf-8")
+                        .header("Access-Control-Allow-Origin", "*")
                         .body(format!("{}", result))
                 }
             }
